@@ -1,0 +1,30 @@
+{
+    "name": "AdvLifeCounter",
+    "version": "1.0.0",
+    "description": "Highly customizable life counter for tracking multiple players with various counter types. Perfect for Magic: The Gathering, D&D, and other tabletop games.",
+    "author": "Modular Portfolio",
+    "category": "Gaming",
+    "type": ["cli", "web", "gui"],
+    "tags": ["gaming", "counter", "magic", "dnd", "tabletop", "multiplayer"],
+    "requirements": [],
+    "features": [
+        "Support for 2-8 players",
+        "Customizable counter types (Life, Poison, Energy, etc.)",
+        "Min/max value constraints",
+        "Color-coded counters",
+        "Counter history tracking",
+        "Bulk operations (reset all)",
+        "Custom counter creation",
+        "Multi-interface support (CLI, Web, GUI)"
+    ],
+    "default_counters": {
+        "Life": {"value": 20, "min_val": 0, "color": "#dc3545"},
+        "Poison": {"value": 0, "min_val": 0, "max_val": 10, "color": "#28a745"},
+        "Energy": {"value": 0, "min_val": 0, "color": "#ffc107"},
+        "Experience": {"value": 0, "color": "#17a2b8"},
+        "Mana": {"value": 0, "min_val": 0, "color": "#6f42c1"},
+        "Commander Damage": {"value": 0, "min_val": 0, "max_val": 21, "color": "#fd7e14"},
+        "Tokens": {"value": 0, "min_val": 0, "color": "#20c997"},
+        "Storm Count": {"value": 0, "min_val": 0, "color": "#6c757d"}
+    }
+}

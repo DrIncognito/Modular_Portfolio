@@ -30,6 +30,12 @@ def tool_page(plugin_name):
                     with open(readme_path, 'r', encoding='utf-8') as f:
                         readme_html = markdown.markdown(f.read(), extensions=['fenced_code', 'tables'])
                 return render_template('info_tool.html', plugin=plugin, plugins=plugins, readme_html=readme_html)
+            # Special case for Gamenight: render games template
+            if plugin_name.lower() == 'gamenight':
+                return render_template('gamenight.html', plugin=plugin, plugins=plugins)
+            # Special case for AdvancedLifeCounter: render life counter template
+            if plugin_name.lower() == 'advlifecounter':
+                return render_template('advanced_life_counter.html', plugin=plugin, plugins=plugins)
             # Special case for TestTool: render template with plugins list
             if plugin_name.lower() == 'testtool':
                 result = None

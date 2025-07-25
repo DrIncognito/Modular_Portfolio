@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+{% block title %}Gamenight{% endblock %}
+{% block head %}
+<style>
+  /* Dice rolling animations */
+  @keyframes diceBounce {
+    0% { 
+      transform: scale(0.3) rotate(-180deg);
+      opacity: 0;
+    }
+    50% { 
+      transform: scale(1.2) rotate(-90deg);
+      opacity: 0.8;
+    }
+    70% { 
+      transform: scale(0.9) rotate(0deg);
+      opacity: 1;
+    }
+    100% { 
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes diceRoll {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(90deg) scale(0.8); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    75% { transform: rotate(270deg) scale(0.9); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  
+  .dice-animation {
+    animation: diceRoll 0.1s linear infinite;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .dice-final {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    cursor: default;
+  }
+  
+  .dice-final:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Enhanced dice display container */
+  #dice-display {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 10px 0;
+    border: 2px solid #dee2e6;
+  }
+  
+  /* Dice type indicators */
+  .dice-type-4 { color: #28a745; } /* Green for d4 */
+  .dice-type-6 { color: #007bff; } /* Blue for d6 */
+  .dice-type-8 { color: #fd7e14; } /* Orange for d8 */
+  .dice-type-10 { color: #6f42c1; } /* Purple for d10 */
+  .dice-type-12 { color: #e83e8c; } /* Pink for d12 */
+  .dice-type-20 { color: #dc3545; } /* Red for d20 */
+  .dice-type-100 { color: #20c997; } /* Teal for d100 */
+  
+  /* Enhanced form styling */
+  .dice-controls {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  
+  /* Roll button enhancement */
+  .roll-button {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+  }
+  
+  .roll-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,123,255,0.4);
+    background: linear-gradient(45deg, #0056b3, #004085);
+  }
+  
+  .roll-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container" style="max-width:900px;">
+  <div class="card p-4 mb-4">
+    <h1 class="mb-3">🎮 Game Night 🎮</h1>
+    <p class="text-muted">Choose from a variety of fun games to play! Each game is interactive and entertaining.</p>
+    
+    <!-- Game Selection Tabs -->
+    <ul class="nav nav-tabs mb-3" id="gameTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="rps-tab" data-bs-toggle="tab" data-bs-target="#rps-pane" type="button" role="tab">Rock Paper Scissors</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="guess-tab" data-bs-toggle="tab" data-bs-target="#guess-pane" type="button" role="tab">Number Guessing</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="hangman-tab" data-bs-toggle="tab" data-bs-target="#hangman-pane" type="button" role="tab">Hangman</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="scramble-tab" data-bs-toggle="tab" data-bs-target="#scramble-pane" type="button" role="tab">Word Scramble</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dice-tab" data-bs-toggle="tab" data-bs-target="#dice-pane" type="button" role="tab">Dice Roll</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- Rock Paper Scissors Tab -->
+      <div class="tab-pane fade show active" id="rps-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h4>🗿📄✂️ Rock Paper Scissors</h4>
+            <p class="text-muted">Choose your weapon and battle the computer!</p>
+            
+            <div class="row mt-4">
+              <div class="col-md-4">
+                <button class="btn btn-outline-primary btn-lg mb-2 w-100 rps-choice" data-choice="rock">
+                  🗿 Rock
+                </button>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-primary btn-lg mb-2 w-100 rps-choice" data-choice="paper">
+                  📄 Paper
+                </button>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-primary btn-lg mb-2 w-100 rps-choice" data-choice="scissors">
+                  ✂️ Scissors
+                </button>
+              </div>
+            </div>
+            
+            <div id="rps-result" class="mt-4 p-3 bg-light rounded" style="display: none;">
+              <h5 id="rps-result-text"></h5>
+              <p id="rps-choices"></p>
+            </div>
+            
+            <div class="mt-3">
+              <button class="btn btn-secondary" onclick="resetRPS()">Reset Game</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Number Guessing Tab -->
+      <div class="tab-pane fade" id="guess-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h4>🔢 Number Guessing Game</h4>
+            <p class="text-muted">I'm thinking of a number between 1 and 100. Can you guess it?</p>
+            
+            <div class="mt-4">
+              <div class="input-group mb-3" style="max-width: 300px; margin: 0 auto;">
+                <input type="number" class="form-control" id="guess-input" placeholder="Enter your guess (1-100)" min="1" max="100">
+                <button class="btn btn-primary" onclick="makeGuess()">Guess!</button>
+              </div>
+            </div>
+            
+            <div id="guess-result" class="mt-4">
+              <p id="guess-message">You have 10 attempts to guess the number!</p>
+              <p id="guess-attempts">Attempts: 0/10</p>
+            </div>
+            
+            <div class="mt-3">
+              <button class="btn btn-secondary" onclick="resetGuessing()">New Game</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hangman Tab -->
+      <div class="tab-pane fade" id="hangman-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h4>🎯 Hangman</h4>
+            <p class="text-muted">Guess the word letter by letter before the drawing is complete!</p>
+            
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div id="hangman-drawing" class="border p-3 mb-3" style="font-family: monospace; white-space: pre-line; min-height: 200px; background-color: #f8f9fa;">
+                  <!-- Hangman drawing will appear here -->
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div id="hangman-word" class="mb-3" style="font-size: 2rem; letter-spacing: 0.5rem; font-family: monospace;">
+                  <!-- Word will appear here -->
+                </div>
+                <p id="hangman-guessed" class="text-muted">Guessed letters: </p>
+                <p id="hangman-wrong">Wrong guesses: 0/6</p>
+                
+                <div class="input-group mb-3" style="max-width: 200px; margin: 0 auto;">
+                  <input type="text" class="form-control" id="hangman-input" placeholder="Enter a letter" maxlength="1">
+                  <button class="btn btn-primary" onclick="guessLetter()">Guess</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-3">
+              <button class="btn btn-secondary" onclick="resetHangman()">New Word</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word Scramble Tab -->
+      <div class="tab-pane fade" id="scramble-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h4>🔤 Word Scramble</h4>
+            <p class="text-muted">Unscramble the letters to form the correct word!</p>
+            
+            <div class="mt-4">
+              <div id="scrambled-word" class="mb-3" style="font-size: 2.5rem; letter-spacing: 0.3rem; color: #007bff; font-weight: bold;">
+                <!-- Scrambled word will appear here -->
+              </div>
+              <p id="scramble-hint" class="text-muted mb-4">
+                <!-- Hint will appear here -->
+              </p>
+              
+              <div class="input-group mb-3" style="max-width: 300px; margin: 0 auto;">
+                <input type="text" class="form-control" id="scramble-input" placeholder="Enter your answer">
+                <button class="btn btn-primary" onclick="checkScramble()">Check Answer</button>
+              </div>
+            </div>
+            
+            <div id="scramble-result" class="mt-4" style="display: none;">
+              <div class="alert" role="alert" id="scramble-alert">
+                <!-- Result will appear here -->
+              </div>
+            </div>
+            
+            <div class="mt-3">
+              <button class="btn btn-secondary" onclick="resetScramble()">New Word</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dice Roll Tab -->
+      <div class="tab-pane fade" id="dice-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h4>🎲 Dice Roll</h4>
+            <p class="text-muted">Roll various types of dice! Supports realistic n-sided dice with animations.</p>
+            
+            <div class="dice-controls">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="num-dice" class="form-label">Number of dice (1-20):</label>
+                  <input type="number" class="form-control" id="num-dice" min="1" max="20" value="1">
+                </div>
+                <div class="col-md-6">
+                  <label for="dice-type-select" class="form-label">Dice type:</label>
+                  <select class="form-select" id="dice-type">
+                    <option value="4">d4 ▲ (Tetrahedron)</option>
+                    <option value="6" selected>d6 🎲 (Cube)</option>
+                    <option value="8">d8 ♦ (Octahedron)</option>
+                    <option value="10">d10 ⬟ (Pentagonal)</option>
+                    <option value="12">d12 ⬢ (Dodecahedron)</option>
+                    <option value="20">d20 ⭘ (Icosahedron)</option>
+                    <option value="100">d100 ⚪ (Sphere)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <p class="text-muted">Or enter dice notation directly:</p>
+                <div class="input-group" style="max-width: 300px; margin: 0 auto;">
+                  <input type="text" class="form-control" id="dice-notation" placeholder="e.g., 2d20, 3d6, 1d100">
+                  <button class="btn btn-outline-secondary" onclick="clearDiceNotation()">Clear</button>
+                </div>
+                <small class="text-muted">Format: [number]d[sides] (e.g., 2d20 means roll 2 twenty-sided dice)</small>
+              </div>
+              
+              <button class="roll-button" onclick="rollDice()">🎲 Roll Dice!</button>
+            </div>
+            
+            <div id="dice-result" class="mt-4" style="display: none;">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div id="dice-notation-display" class="mb-3 h5 text-primary">
+                    <!-- Dice notation will appear here -->
+                  </div>
+                  <div id="dice-display" class="mb-3">
+                    <!-- Animated dice results will appear here -->
+                  </div>
+                  <p id="dice-total" class="h5 text-success mb-2">
+                    <!-- Total will appear here -->
+                  </p>
+                  <div id="dice-breakdown" class="text-muted">
+                    <!-- Individual rolls will appear here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <h6>Dice Types Guide:</h6>
+              <div class="row text-start">
+                <div class="col-md-6">
+                  <small class="dice-type-4">▲ d4 - Tetrahedron (1-4)</small><br>
+                  <small class="dice-type-6">🎲 d6 - Cube (1-6)</small><br>
+                  <small class="dice-type-8">♦ d8 - Octahedron (1-8)</small><br>
+                  <small class="dice-type-10">⬟ d10 - Pentagonal (1-10)</small>
+                </div>
+                <div class="col-md-6">
+                  <small class="dice-type-12">⬢ d12 - Dodecahedron (1-12)</small><br>
+                  <small class="dice-type-20">⭘ d20 - Icosahedron (1-20)</small><br>
+                  <small class="dice-type-100">⚪ d100 - Sphere (1-100)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Rock Paper Scissors Game
+let rpsScore = { player: 0, computer: 0 };
+
+document.querySelectorAll('.rps-choice').forEach(button => {
+  button.addEventListener('click', function() {
+    playRPS(this.dataset.choice);
+  });
+});
+
+function playRPS(playerChoice) {
+  const choices = ['rock', 'paper', 'scissors'];
+  const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+  
+  let result;
+  if (playerChoice === computerChoice) {
+    result = "It's a tie!";
+  } else if (
+    (playerChoice === 'rock' && computerChoice === 'scissors') ||
+    (playerChoice === 'paper' && computerChoice === 'rock') ||
+    (playerChoice === 'scissors' && computerChoice === 'paper')
+  ) {
+    result = "You win!";
+    rpsScore.player++;
+  } else {
+    result = "Computer wins!";
+    rpsScore.computer++;
+  }
+  
+  const emojis = { rock: '🗿', paper: '📄', scissors: '✂️' };
+  
+  document.getElementById('rps-result-text').textContent = result;
+  document.getElementById('rps-choices').innerHTML = 
+    `You: ${emojis[playerChoice]} ${playerChoice} | Computer: ${emojis[computerChoice]} ${computerChoice}<br>
+     Score - You: ${rpsScore.player} | Computer: ${rpsScore.computer}`;
+  document.getElementById('rps-result').style.display = 'block';
+}
+
+function resetRPS() {
+  rpsScore = { player: 0, computer: 0 };
+  document.getElementById('rps-result').style.display = 'none';
+}
+
+// Number Guessing Game
+let guessingTarget = Math.floor(Math.random() * 100) + 1;
+let guessingAttempts = 0;
+const maxAttempts = 10;
+
+function makeGuess() {
+  const guessInput = document.getElementById('guess-input');
+  const guess = parseInt(guessInput.value);
+  
+  if (!guess || guess < 1 || guess > 100) {
+    alert('Please enter a valid number between 1 and 100!');
+    return;
+  }
+  
+  guessingAttempts++;
+  guessInput.value = '';
+  
+  let message;
+  if (guess === guessingTarget) {
+    message = `🎉 Congratulations! You guessed ${guessingTarget} in ${guessingAttempts} attempts!`;
+    document.getElementById('guess-input').disabled = true;
+  } else if (guessingAttempts >= maxAttempts) {
+    message = `😞 Game over! The number was ${guessingTarget}. Better luck next time!`;
+    document.getElementById('guess-input').disabled = true;
+  } else if (guess < guessingTarget) {
+    message = `Too low! Try higher.`;
+  } else {
+    message = `Too high! Try lower.`;
+  }
+  
+  document.getElementById('guess-message').textContent = message;
+  document.getElementById('guess-attempts').textContent = `Attempts: ${guessingAttempts}/${maxAttempts}`;
+}
+
+function resetGuessing() {
+  guessingTarget = Math.floor(Math.random() * 100) + 1;
+  guessingAttempts = 0;
+  document.getElementById('guess-input').disabled = false;
+  document.getElementById('guess-input').value = '';
+  document.getElementById('guess-message').textContent = 'You have 10 attempts to guess the number!';
+  document.getElementById('guess-attempts').textContent = 'Attempts: 0/10';
+}
+
+// Hangman Game
+const hangmanWords = [
+  'PYTHON', 'PROGRAMMING', 'COMPUTER', 'KEYBOARD', 'MONITOR', 'SOFTWARE',
+  'HARDWARE', 'ALGORITHM', 'FUNCTION', 'VARIABLE', 'DEBUGGING', 'CODING'
+];
+
+let hangmanWord = '';
+let hangmanGuessed = new Set();
+let hangmanWrong = 0;
+const maxWrong = 6;
+
+const hangmanStages = [
+  '',
+  '  |',
+  '  |\n  |',
+  '  |\n  |\n  |',
+  '  +---+\n  |   |\n      |\n      |\n      |\n      |',
+  '  +---+\n  |   |\n  O   |\n      |\n      |\n      |',
+  '  +---+\n  |   |\n  O   |\n  |   |\n      |\n      |',
+  '  +---+\n  |   |\n  O   |\n /|   |\n      |\n      |',
+  '  +---+\n  |   |\n  O   |\n /|\\  |\n      |\n      |',
+  '  +---+\n  |   |\n  O   |\n /|\\  |\n /    |\n      |',
+  '  +---+\n  |   |\n  O   |\n /|\\  |\n / \\  |\n      |'
+];
+
+function initHangman() {
+  hangmanWord = hangmanWords[Math.floor(Math.random() * hangmanWords.length)];
+  hangmanGuessed = new Set();
+  hangmanWrong = 0;
+  updateHangmanDisplay();
+}
+
+function updateHangmanDisplay() {
+  const wordDisplay = hangmanWord.split('').map(letter => 
+    hangmanGuessed.has(letter) ? letter : '_'
+  ).join(' ');
+  
+  document.getElementById('hangman-word').textContent = wordDisplay;
+  document.getElementById('hangman-drawing').textContent = hangmanStages[Math.min(hangmanWrong, hangmanStages.length - 1)];
+  document.getElementById('hangman-guessed').textContent = 'Guessed letters: ' + Array.from(hangmanGuessed).sort().join(', ');
+  document.getElementById('hangman-wrong').textContent = `Wrong guesses: ${hangmanWrong}/${maxWrong}`;
+}
+
+function guessLetter() {
+  const input = document.getElementById('hangman-input');
+  const letter = input.value.toUpperCase().trim();
+  
+  if (!letter || letter.length !== 1 || !letter.match(/[A-Z]/)) {
+    alert('Please enter a single letter!');
+    return;
+  }
+  
+  if (hangmanGuessed.has(letter)) {
+    alert('You already guessed that letter!');
+    return;
+  }
+  
+  input.value = '';
+  hangmanGuessed.add(letter);
+  
+  if (!hangmanWord.includes(letter)) {
+    hangmanWrong++;
+  }
+  
+  updateHangmanDisplay();
+  
+  const wordDisplay = hangmanWord.split('').map(letter => 
+    hangmanGuessed.has(letter) ? letter : '_'
+  ).join(' ');
+  
+  if (!wordDisplay.includes('_')) {
+    setTimeout(() => alert(`🎉 Congratulations! You guessed the word: ${hangmanWord}`), 100);
+  } else if (hangmanWrong >= maxWrong) {
+    setTimeout(() => alert(`😞 Game over! The word was: ${hangmanWord}`), 100);
+  }
+}
+
+function resetHangman() {
+  initHangman();
+}
+
+// Word Scramble Game
+const scrambleWords = [
+  'CHALLENGE', 'ADVENTURE', 'MYSTERY', 'TREASURE', 'JOURNEY', 'DISCOVERY',
+  'KNOWLEDGE', 'WISDOM', 'LEARNING', 'EDUCATION', 'CREATIVITY', 'INNOVATION'
+];
+
+let scrambleOriginal = '';
+let scrambledWord = '';
+
+function initScramble() {
+  scrambleOriginal = scrambleWords[Math.floor(Math.random() * scrambleWords.length)];
+  scrambledWord = scrambleOriginal.split('').sort(() => Math.random() - 0.5).join('');
+  
+  // Make sure it's actually scrambled
+  while (scrambledWord === scrambleOriginal) {
+    scrambledWord = scrambleOriginal.split('').sort(() => Math.random() - 0.5).join('');
+  }
+  
+  document.getElementById('scrambled-word').textContent = scrambledWord;
+  document.getElementById('scramble-hint').textContent = `Hint: It's ${scrambleOriginal.length} letters long`;
+  document.getElementById('scramble-result').style.display = 'none';
+  document.getElementById('scramble-input').value = '';
+}
+
+function checkScramble() {
+  const input = document.getElementById('scramble-input');
+  const guess = input.value.toUpperCase().trim();
+  
+  const alert = document.getElementById('scramble-alert');
+  const result = document.getElementById('scramble-result');
+  
+  if (guess === scrambleOriginal) {
+    alert.className = 'alert alert-success';
+    alert.textContent = `🎉 Correct! The word was '${scrambleOriginal}'`;
+  } else {
+    alert.className = 'alert alert-danger';
+    alert.textContent = `😞 Sorry! The correct word was '${scrambleOriginal}'`;
+  }
+  
+  result.style.display = 'block';
+}
+
+function resetScramble() {
+  initScramble();
+}
+
+// Custom realistic dice shapes with animations
+function createCustomDiceEmoji(sides, value) {
+  const diceShapes = {
+    4: '▲',   // Tetrahedron (4-sided)
+    6: '⚀',   // Will be replaced with actual pip based on value
+    8: '♦',   // Octahedron (8-sided) 
+    10: '⬟',  // Pentagonal trapezohedron (10-sided)
+    12: '⬢',  // Dodecahedron (12-sided)
+    20: '⭘',  // Icosahedron (20-sided)
+    100: '⚪' // Sphere-like (100-sided)
+  };
+  
+  // Special handling for d6 with actual pip representation
+  if (sides === 6) {
+    const d6Faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    return d6Faces[value - 1] || '🎲';
+  }
+  
+  return diceShapes[sides] || '🎲';
+}
+
+function animateDiceRoll(container, rolls, diceSides, callback) {
+  const animationDuration = 1500; // 1.5 seconds
+  const frameInterval = 100; // Update every 100ms
+  const frames = animationDuration / frameInterval;
+  
+  let currentFrame = 0;
+  
+  // Clear container
+  container.innerHTML = '';
+  container.style.display = 'block';
+  
+  const animationInterval = setInterval(() => {
+    container.innerHTML = '';
+    
+    // Create animated dice for each roll
+    rolls.forEach((finalRoll, index) => {
+      const diceElement = document.createElement('span');
+      diceElement.className = 'dice-animation';
+      diceElement.style.display = 'inline-block';
+      diceElement.style.margin = '5px';
+      diceElement.style.fontSize = '2.5rem';
+      diceElement.style.transition = 'transform 0.1s ease-in-out';
+      
+      // Generate random value for animation
+      const animValue = Math.floor(Math.random() * diceSides) + 1;
+      diceElement.textContent = createCustomDiceEmoji(diceSides, animValue);
+      
+      // Add spinning effect
+      const rotation = (currentFrame * 45) % 360;
+      diceElement.style.transform = `rotate(${rotation}deg) scale(${0.8 + Math.sin(currentFrame * 0.5) * 0.2})`;
+      
+      container.appendChild(diceElement);
+    });
+    
+    currentFrame++;
+    
+    // End animation and show final results
+    if (currentFrame >= frames) {
+      clearInterval(animationInterval);
+      
+      // Show final results with bounce effect
+      container.innerHTML = '';
+      rolls.forEach((roll, index) => {
+        const diceElement = document.createElement('span');
+        diceElement.className = 'dice-final';
+        diceElement.style.display = 'inline-block';
+        diceElement.style.margin = '5px';
+        diceElement.style.fontSize = '2.5rem';
+        diceElement.style.animation = 'diceBounce 0.6s ease-out';
+        diceElement.style.animationDelay = `${index * 0.1}s`;
+        diceElement.textContent = createCustomDiceEmoji(diceSides, roll);
+        
+        // Add value label for non-d6 dice
+        if (diceSides !== 6) {
+          const valueLabel = document.createElement('div');
+          valueLabel.style.fontSize = '0.8rem';
+          valueLabel.style.fontWeight = 'bold';
+          valueLabel.style.color = '#007bff';
+          valueLabel.style.marginTop = '-5px';
+          valueLabel.textContent = roll;
+          
+          const diceContainer = document.createElement('div');
+          diceContainer.style.display = 'inline-block';
+          diceContainer.style.textAlign = 'center';
+          diceContainer.style.margin = '5px';
+          diceContainer.appendChild(diceElement);
+          diceContainer.appendChild(valueLabel);
+          
+          container.appendChild(diceContainer);
+        } else {
+          container.appendChild(diceElement);
+        }
+      });
+      
+      if (callback) callback();
+    }
+  }, frameInterval);
+}
+
+// Dice Roll Game
+function rollDice() {
+  const diceNotationInput = document.getElementById('dice-notation');
+  const numDiceInput = document.getElementById('num-dice');
+  const diceTypeSelect = document.getElementById('dice-type');
+  
+  let numDice, diceSides, diceNotation;
+  
+  // Check if dice notation is provided
+  if (diceNotationInput.value.trim()) {
+    diceNotation = diceNotationInput.value.trim().toLowerCase();
+    // Parse dice notation (e.g., "2d20", "3d6")
+    const match = diceNotation.match(/^(\d*)d(\d+)$/);
+    if (match) {
+      numDice = parseInt(match[1]) || 1;
+      diceSides = parseInt(match[2]);
+      
+      // Validate dice sides
+      const validSides = [4, 6, 8, 10, 12, 20, 100];
+      if (!validSides.includes(diceSides)) {
+        alert('Invalid dice type! Please use d4, d6, d8, d10, d12, d20, or d100.');
+        return;
+      }
+    } else {
+      alert('Invalid dice notation! Use format like "2d20" or "1d6".');
+      return;
+    }
+  } else {
+    // Use form inputs
+    numDice = parseInt(numDiceInput.value);
+    diceSides = parseInt(diceTypeSelect.value);
+    diceNotation = `${numDice}d${diceSides}`;
+  }
+  
+  // Validate ranges
+  numDice = Math.max(1, Math.min(20, numDice));
+  
+  // Roll the dice
+  const rolls = [];
+  for (let i = 0; i < numDice; i++) {
+    rolls.push(Math.floor(Math.random() * diceSides) + 1);
+  }
+  
+  const total = rolls.reduce((sum, roll) => sum + roll, 0);
+  
+  // Get dice shape for notation display
+  const diceShapes = {
+    4: '▲',   // Tetrahedron
+    6: '🎲',  // Classic cube
+    8: '♦',   // Octahedron
+    10: '⬟',  // Pentagonal trapezohedron
+    12: '⬢',  // Dodecahedron
+    20: '⭘',  // Icosahedron
+    100: '⚪' // Sphere-like
+  };
+  
+  const shapeIcon = diceShapes[diceSides] || '🎲';
+  
+  // Display notation
+  document.getElementById('dice-notation-display').textContent = `${shapeIcon} ${diceNotation.toUpperCase()}`;
+  
+  // Show result container
+  document.getElementById('dice-result').style.display = 'block';
+  
+  // Animate the dice roll
+  const diceDisplay = document.getElementById('dice-display');
+  animateDiceRoll(diceDisplay, rolls, diceSides, () => {
+    // Show totals after animation completes
+    if (numDice === 1) {
+      document.getElementById('dice-total').textContent = `Result: ${rolls[0]}`;
+      document.getElementById('dice-breakdown').textContent = '';
+    } else {
+      document.getElementById('dice-total').textContent = `Total: ${total}`;
+      document.getElementById('dice-breakdown').textContent = 
+        `Individual rolls: [${rolls.join(', ')}]`;
+    }
+  });
+}
+
+function clearDiceNotation() {
+  document.getElementById('dice-notation').value = '';
+}
+
+// Initialize games on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initHangman();
+  initScramble();
+  
+  // Allow Enter key for inputs
+  document.getElementById('guess-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') makeGuess();
+  });
+  
+  document.getElementById('hangman-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') guessLetter();
+  });
+  
+  document.getElementById('scramble-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') checkScramble();
+  });
+});
+</script>
+
+{% endblock %}

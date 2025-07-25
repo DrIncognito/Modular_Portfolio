@@ -1,0 +1,601 @@
+{% extends "base.html" %}
+
+{% block title %}Adv. Life Counter{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">🎮 Adv. Life Counter</h3>
+                    <small>Highly customizable counter tracking for tabletop games</small>
+                </div>
+                <div class="card-body">
+                    <!-- Game Setup Section -->
+                    <div id="setupSection">
+                        <h4>Game Setup</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="numPlayers" class="form-label">Number of Players (2-8):</label>
+                                <input type="number" class="form-control" id="numPlayers" min="2" max="8" value="2">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5>Player Names</h5>
+                                <div id="playerNamesContainer">
+                                    <!-- Dynamic player name inputs -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5>Select Counter Types</h5>
+                                <div class="row" id="counterTypesContainer">
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Life" checked>
+                                            <label class="form-check-label" for="counter-Life">
+                                                <span class="badge" style="background-color: #dc3545;">Life (20)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Poison" checked>
+                                            <label class="form-check-label" for="counter-Poison">
+                                                <span class="badge" style="background-color: #28a745;">Poison (0-10)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Energy">
+                                            <label class="form-check-label" for="counter-Energy">
+                                                <span class="badge" style="background-color: #ffc107; color: #000;">Energy (0+)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Experience">
+                                            <label class="form-check-label" for="counter-Experience">
+                                                <span class="badge" style="background-color: #17a2b8;">Experience (0)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Mana">
+                                            <label class="form-check-label" for="counter-Mana">
+                                                <span class="badge" style="background-color: #6f42c1;">Mana (0+)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Commander Damage">
+                                            <label class="form-check-label" for="counter-Commander Damage">
+                                                <span class="badge" style="background-color: #fd7e14;">Cmd Dmg (0-21)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Tokens">
+                                            <label class="form-check-label" for="counter-Tokens">
+                                                <span class="badge" style="background-color: #20c997;">Tokens (0+)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="counter-Storm Count">
+                                            <label class="form-check-label" for="counter-Storm Count">
+                                                <span class="badge" style="background-color: #6c757d;">Storm (0+)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-success btn-lg" onclick="startGame()">🎮 Start Game</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Interface Section -->
+                    <div id="gameSection" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 id="gameTitle">Game in Progress</h4>
+                            <div>
+                                <button class="btn btn-warning" onclick="resetAllCounters()">🔄 Reset All</button>
+                                <button class="btn btn-secondary" onclick="newGame()">🆕 New Game</button>
+                            </div>
+                        </div>
+                        
+                        <div id="playersGrid" class="row">
+                            <!-- Dynamic player cards will be inserted here -->
+                        </div>
+                        
+                        <!-- History Panel -->
+                        <div class="mt-4">
+                            <button class="btn btn-info" onclick="toggleHistory()">📊 Toggle History</button>
+                            <div id="historyPanel" style="display: none;" class="mt-3">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Counter History</h5>
+                                    </div>
+                                    <div class="card-body" id="historyContent">
+                                        <!-- History content will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.player-card {
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: all 0.3s ease;
+}
+
+.player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.player-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+.counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.7);
+}
+
+.counter-name {
+    font-weight: bold;
+    min-width: 100px;
+}
+
+.counter-value {
+    font-size: 1.3em;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: center;
+}
+
+.counter-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.counter-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: none;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.counter-btn:hover {
+    transform: scale(1.1);
+}
+
+.btn-decrement {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-increment {
+    background-color: #28a745;
+    color: white;
+}
+
+.amount-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+@keyframes counterUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.counter-updated {
+    animation: counterUpdate 0.3s ease;
+}
+
+.badge {
+    font-size: 0.9em;
+}
+
+#setupSection {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+</style>
+
+<script>
+const counterTemplates = {
+    'Life': {value: 20, min_val: 0, max_val: null, color: '#dc3545'},
+    'Poison': {value: 0, min_val: 0, max_val: 10, color: '#28a745'},
+    'Energy': {value: 0, min_val: 0, max_val: null, color: '#ffc107'},
+    'Experience': {value: 0, min_val: null, max_val: null, color: '#17a2b8'},
+    'Mana': {value: 0, min_val: 0, max_val: null, color: '#6f42c1'},
+    'Commander Damage': {value: 0, min_val: 0, max_val: 21, color: '#fd7e14'},
+    'Tokens': {value: 0, min_val: 0, max_val: null, color: '#20c997'},
+    'Storm Count': {value: 0, min_val: 0, max_val: null, color: '#6c757d'}
+};
+
+let gameData = {
+    players: [],
+    history: []
+};
+
+// Initialize player name inputs based on number of players
+document.getElementById('numPlayers').addEventListener('change', function() {
+    updatePlayerNameInputs();
+});
+
+function updatePlayerNameInputs() {
+    const numPlayers = parseInt(document.getElementById('numPlayers').value);
+    const container = document.getElementById('playerNamesContainer');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < numPlayers; i++) {
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'mb-2';
+        inputGroup.innerHTML = `
+            <input type="text" class="form-control" id="playerName${i}" 
+                   placeholder="Player ${i + 1} name" value="Player ${i + 1}">
+        `;
+        container.appendChild(inputGroup);
+    }
+}
+
+function startGame() {
+    // Get player names
+    const numPlayers = parseInt(document.getElementById('numPlayers').value);
+    const playerNames = [];
+    
+    for (let i = 0; i < numPlayers; i++) {
+        const nameInput = document.getElementById(`playerName${i}`);
+        const name = nameInput.value.trim() || `Player ${i + 1}`;
+        playerNames.push(name);
+    }
+    
+    // Get selected counter types
+    const selectedCounters = [];
+    const checkboxes = document.querySelectorAll('#counterTypesContainer input[type="checkbox"]:checked');
+    checkboxes.forEach(checkbox => {
+        const counterName = checkbox.id.replace('counter-', '');
+        selectedCounters.push(counterName);
+    });
+    
+    if (selectedCounters.length === 0) {
+        alert('Please select at least one counter type.');
+        return;
+    }
+    
+    // Initialize game data
+    gameData.players = [];
+    gameData.history = [];
+    
+    playerNames.forEach((name, index) => {
+        const player = {
+            id: `player_${index}`,
+            name: name,
+            counters: {}
+        };
+        
+        selectedCounters.forEach(counterName => {
+            const template = counterTemplates[counterName];
+            player.counters[counterName] = {
+                name: counterName,
+                value: template.value,
+                min_val: template.min_val,
+                max_val: template.max_val,
+                color: template.color,
+                history: [template.value]
+            };
+        });
+        
+        gameData.players.push(player);
+    });
+    
+    // Switch to game interface
+    document.getElementById('setupSection').style.display = 'none';
+    document.getElementById('gameSection').style.display = 'block';
+    
+    renderGame();
+}
+
+function renderGame() {
+    const playersGrid = document.getElementById('playersGrid');
+    playersGrid.innerHTML = '';
+    
+    const cols = Math.min(3, gameData.players.length);
+    const colClass = `col-md-${12 / cols}`;
+    
+    gameData.players.forEach(player => {
+        const playerCard = document.createElement('div');
+        playerCard.className = colClass;
+        
+        let countersHtml = '';
+        Object.entries(player.counters).forEach(([name, counter]) => {
+            const bounds = getBoundsString(counter);
+            countersHtml += `
+                <div class="counter-row">
+                    <div class="counter-name" style="color: ${counter.color};">${name}</div>
+                    <div class="counter-value" style="color: ${counter.color};" id="counter-${player.id}-${name}">
+                        ${counter.value}
+                    </div>
+                    <div class="counter-controls">
+                        <button class="counter-btn btn-decrement" 
+                                onclick="modifyCounter('${player.id}', '${name}', -1)">-</button>
+                        <input type="number" class="amount-input" value="1" 
+                               id="amount-${player.id}-${name}" min="1" max="99">
+                        <button class="counter-btn btn-increment" 
+                                onclick="modifyCounter('${player.id}', '${name}', 1)">+</button>
+                    </div>
+                </div>
+                ${bounds ? `<small class="text-muted">${bounds}</small>` : ''}
+            `;
+        });
+        
+        playerCard.innerHTML = `
+            <div class="player-card">
+                <div class="player-name">👤 ${player.name}</div>
+                ${countersHtml}
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="setCounterValue('${player.id}')">Set Value</button>
+                    <button class="btn btn-sm btn-outline-warning" 
+                            onclick="resetPlayerCounters('${player.id}')">Reset</button>
+                </div>
+            </div>
+        `;
+        
+        playersGrid.appendChild(playerCard);
+    });
+}
+
+function getBoundsString(counter) {
+    if (counter.min_val !== null || counter.max_val !== null) {
+        const min = counter.min_val !== null ? counter.min_val : '∞';
+        const max = counter.max_val !== null ? counter.max_val : '∞';
+        return `Range: ${min} - ${max}`;
+    }
+    return '';
+}
+
+function modifyCounter(playerId, counterName, direction) {
+    const player = gameData.players.find(p => p.id === playerId);
+    const counter = player.counters[counterName];
+    const amountInput = document.getElementById(`amount-${playerId}-${counterName}`);
+    const amount = parseInt(amountInput.value) * direction;
+    
+    let newValue = counter.value + amount;
+    
+    // Apply bounds
+    if (counter.min_val !== null && newValue < counter.min_val) {
+        newValue = counter.min_val;
+    }
+    if (counter.max_val !== null && newValue > counter.max_val) {
+        newValue = counter.max_val;
+    }
+    
+    // Update counter
+    counter.value = newValue;
+    counter.history.push(newValue);
+    
+    // Update UI
+    const counterElement = document.getElementById(`counter-${playerId}-${counterName}`);
+    counterElement.textContent = newValue;
+    counterElement.classList.add('counter-updated');
+    
+    setTimeout(() => {
+        counterElement.classList.remove('counter-updated');
+    }, 300);
+    
+    // Log history
+    gameData.history.push({
+        timestamp: new Date().toLocaleTimeString(),
+        player: player.name,
+        counter: counterName,
+        action: `${amount > 0 ? '+' : ''}${amount}`,
+        newValue: newValue
+    });
+}
+
+function setCounterValue(playerId) {
+    const player = gameData.players.find(p => p.id === playerId);
+    const counterNames = Object.keys(player.counters);
+    
+    const counterName = prompt(`Which counter would you like to set?\nOptions: ${counterNames.join(', ')}`);
+    if (!counterName || !player.counters[counterName]) {
+        return;
+    }
+    
+    const newValue = parseInt(prompt(`Set ${counterName} to what value?`));
+    if (isNaN(newValue)) {
+        return;
+    }
+    
+    const counter = player.counters[counterName];
+    let finalValue = newValue;
+    
+    // Apply bounds
+    if (counter.min_val !== null && finalValue < counter.min_val) {
+        finalValue = counter.min_val;
+    }
+    if (counter.max_val !== null && finalValue > counter.max_val) {
+        finalValue = counter.max_val;
+    }
+    
+    counter.value = finalValue;
+    counter.history.push(finalValue);
+    
+    // Update UI
+    const counterElement = document.getElementById(`counter-${playerId}-${counterName}`);
+    counterElement.textContent = finalValue;
+    counterElement.classList.add('counter-updated');
+    
+    setTimeout(() => {
+        counterElement.classList.remove('counter-updated');
+    }, 300);
+    
+    // Log history
+    gameData.history.push({
+        timestamp: new Date().toLocaleTimeString(),
+        player: player.name,
+        counter: counterName,
+        action: `Set to ${finalValue}`,
+        newValue: finalValue
+    });
+}
+
+function resetPlayerCounters(playerId) {
+    const player = gameData.players.find(p => p.id === playerId);
+    
+    if (!confirm(`Reset all counters for ${player.name}?`)) {
+        return;
+    }
+    
+    Object.entries(player.counters).forEach(([name, counter]) => {
+        const initialValue = counter.history[0];
+        counter.value = initialValue;
+        counter.history.push(initialValue);
+        
+        const counterElement = document.getElementById(`counter-${playerId}-${name}`);
+        counterElement.textContent = initialValue;
+    });
+    
+    gameData.history.push({
+        timestamp: new Date().toLocaleTimeString(),
+        player: player.name,
+        counter: 'All',
+        action: 'Reset',
+        newValue: 'Initial values'
+    });
+}
+
+function resetAllCounters() {
+    if (!confirm('Reset all counters for all players?')) {
+        return;
+    }
+    
+    gameData.players.forEach(player => {
+        Object.entries(player.counters).forEach(([name, counter]) => {
+            const initialValue = counter.history[0];
+            counter.value = initialValue;
+            counter.history.push(initialValue);
+            
+            const counterElement = document.getElementById(`counter-${player.id}-${name}`);
+            counterElement.textContent = initialValue;
+        });
+    });
+    
+    gameData.history.push({
+        timestamp: new Date().toLocaleTimeString(),
+        player: 'All',
+        counter: 'All',
+        action: 'Reset',
+        newValue: 'Initial values'
+    });
+}
+
+function newGame() {
+    if (confirm('Start a new game? This will reset all progress.')) {
+        document.getElementById('setupSection').style.display = 'block';
+        document.getElementById('gameSection').style.display = 'none';
+        document.getElementById('historyPanel').style.display = 'none';
+        
+        // Reset form
+        document.getElementById('numPlayers').value = 2;
+        updatePlayerNameInputs();
+        
+        // Reset checkboxes
+        document.querySelectorAll('#counterTypesContainer input[type="checkbox"]').forEach(cb => {
+            cb.checked = ['counter-Life', 'counter-Poison'].includes(cb.id);
+        });
+    }
+}
+
+function toggleHistory() {
+    const historyPanel = document.getElementById('historyPanel');
+    const historyContent = document.getElementById('historyContent');
+    
+    if (historyPanel.style.display === 'none') {
+        // Show history
+        let historyHtml = '<div class="table-responsive"><table class="table table-sm">';
+        historyHtml += '<thead><tr><th>Time</th><th>Player</th><th>Counter</th><th>Action</th><th>New Value</th></tr></thead><tbody>';
+        
+        gameData.history.slice(-50).forEach(entry => {
+            historyHtml += `
+                <tr>
+                    <td>${entry.timestamp}</td>
+                    <td>${entry.player}</td>
+                    <td>${entry.counter}</td>
+                    <td>${entry.action}</td>
+                    <td>${entry.newValue}</td>
+                </tr>
+            `;
+        });
+        
+        historyHtml += '</tbody></table></div>';
+        
+        if (gameData.history.length === 0) {
+            historyHtml = '<p class="text-muted">No actions yet. Start playing to see history here!</p>';
+        }
+        
+        historyContent.innerHTML = historyHtml;
+        historyPanel.style.display = 'block';
+    } else {
+        historyPanel.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updatePlayerNameInputs();
+});
+</script>
+{% endblock %}

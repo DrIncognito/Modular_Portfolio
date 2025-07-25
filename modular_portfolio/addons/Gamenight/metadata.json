@@ -1,0 +1,6 @@
+{
+  "name": "Gamenight",
+  "description": "Simple games to play.",
+  "version": "0.1",
+  "type": ["cli", "web", "gui"]
+}
