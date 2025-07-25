@@ -2,3 +2,7 @@ flask
 pyqt5
 rich
 watchdog
+markdown
+markdown
+speedtest-CLI
+

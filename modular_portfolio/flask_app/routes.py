@@ -1,4 +1,8 @@
 
+import sys
+import os
+# Add calc_module to the path for core imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'calc_module')))
 
 from flask import Blueprint, request, redirect, url_for, render_template_string
 from modular_portfolio.modular_core.loader import PluginLoader
