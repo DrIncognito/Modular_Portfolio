@@ -1,0 +1,3 @@
+[submodule "calc_module"]
+	path = calc_module
+	url = https://github.com/Mauination/CalcModule.git
