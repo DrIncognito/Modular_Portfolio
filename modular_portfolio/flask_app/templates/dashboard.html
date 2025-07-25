@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Modular Portfolio Dashboard{% endblock %}
+{% block content %}
+<h1 class="mb-4 mt-4 text-center">Modular Portfolio Dashboard</h1>
+<div class="row justify-content-center">
+  {% set infotool = plugins|selectattr('name', 'equalto', 'InfoTool')|list %}
+  {% set other_plugins = plugins|rejectattr('name', 'equalto', 'InfoTool')|list %}
+  {% if infotool %}
+    <div class="col-md-4">
+      <div class="plugin-card border-info info-panel-card" style="border:2px solid #0dcaf0; position:relative;">
+        <!-- Gold star icon in top left corner -->
+        <span style="position:absolute; top:12px; left:12px; z-index:2;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#FFD700" viewBox="0 0 24 24" style="vertical-align:middle;">
+            <path d="M12 2l2.9 8.9H24l-7.4 5.4 2.9 8.9L12 17.8 6.5 25.2l2.9-8.9L2 10.9h9.1z"/>
+          </svg>
+        </span>
+        <h2 class="text-info"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#0dcaf0" class="bi bi-info-circle me-1" viewBox="0 0 16 16" style="vertical-align:middle;">
+          <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13A6 6 0 1 1 8 2a6 6 0 0 1 0 12z"/>
+          <circle cx="8" cy="4.5" r="1"/>
+          <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466z"/>
+        </svg>InfoTool</h2>
+        <p class="info-panel-desc">{{ infotool[0].metadata.description }}</p>
+        <p class="info-panel-type"><b>Type:</b> {{ infotool[0].metadata.type|join(', ') }}</p>
+        <a href="/tool/InfoTool" class="btn btn-info info-panel-btn" style="color:#222;">Open</a>
+      </div>
+    </div>
+  {% endif %}
+  {% for plugin in other_plugins %}
+  <div class="col-md-4">
+    <div class="plugin-card">
+      <h2>{{ plugin.metadata.name }}</h2>
+      <p>{{ plugin.metadata.description }}</p>
+      <p><b>Type:</b> {{ plugin.metadata.type|join(', ') }}</p>
+      <a href="/tool/{{ plugin.name }}" class="btn btn-primary">Open</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<style>
+  .info-panel-card {
+    /* Default (dark mode) styles */
+    border:2px solid #0dcaf0;
+    background:rgba(13,202,240,0.08);
+    color:#eafcff;
+  }
+  .info-panel-desc, .info-panel-type {
+    color:inherit;
+    font-size:inherit;
+    font-weight:inherit;
+    letter-spacing:inherit;
+    text-shadow:none;
+  }
+  /* Light mode styles */
+  .light-mode .info-panel-card {
+    color:#222;
+    border:2px solid #0dcaf0;
+    box-shadow:0 2px 12px rgba(13,202,240,0.12);
+  }
+  .light-mode .info-panel-desc, .light-mode .info-panel-type {
+    color:inherit;
+    font-size:inherit;
+    font-weight:inherit;
+    letter-spacing:inherit;
+    text-shadow:none;
+  }
+  .light-mode .info-panel-type b {
+    font-weight:700;
+  }
+  .light-mode .info-panel-btn {
+    background:#0dcaf0;
+    color:#222 !important;
+    border:none;
+    font-weight:600;
+    box-shadow:0 1px 4px rgba(13,202,240,0.10);
+  }
+  .light-mode .info-panel-card .text-info {
+    color:#0dcaf0 !important;
+    text-shadow:0 1px 0 #fff, 0 0 2px #eafcff;
+  }
+</style>
+{% endblock %}

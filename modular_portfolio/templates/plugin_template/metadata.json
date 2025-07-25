@@ -1,0 +1,6 @@
+{
+  "name": "MyPlugin",
+  "description": "Describe your plugin here.",
+  "version": "0.1",
+  "type": ["cli", "web", "gui"]
+}

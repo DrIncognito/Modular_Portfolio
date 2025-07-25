@@ -1,0 +1,6 @@
+{
+  "name": "InfoTool",
+  "description": "An Information tool on modular plugin setup, creation, and usage.",
+  "version": "0.1",
+  "type": ["cli", "web", "gui"]
+}

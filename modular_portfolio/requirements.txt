@@ -1,0 +1,4 @@
+flask
+pyqt5
+rich
+watchdog

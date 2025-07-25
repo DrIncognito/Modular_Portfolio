@@ -1,0 +1,6 @@
+{
+  "name": "TestTool",
+  "description": "A tool for testing network and system information and performance.",
+  "version": "0.1",
+  "type": ["cli", "web", "gui"]
+}

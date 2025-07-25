@@ -60,5 +60,3 @@ python utils/plugin_creator.py --name MyTool
 ```
 
 Then implement the logic in `main.py` and update `metadata.json`.
-
-Don't forget to implement flask page template for the tool page and update routes

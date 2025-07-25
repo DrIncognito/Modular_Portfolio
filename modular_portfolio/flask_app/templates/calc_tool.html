@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}CalcTool{% endblock %}
+{% block content %}
+<div class="container" style="max-width:900px;">
+  <div class="card p-4 mb-4">
+    <h1 class="mb-3">CalcTool</h1>
+    <p class="text-muted">Select a category, then an operation. Enter the required arguments and click Calculate. All formulas and operations are powered by CalcModule.</p>
+    <ul class="nav nav-tabs mb-3" id="calcTab" role="tablist">
+      {% for cat, ops in categories.items() if ops %}
+        <li class="nav-item" role="presentation">
+          <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-{{ cat }}" data-bs-toggle="tab" data-bs-target="#tab-pane-{{ cat }}" type="button" role="tab">{{ cat }}</button>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="tab-content">
+      {% for cat, ops in categories.items() if ops %}
+      <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab-pane-{{ cat }}" role="tabpanel">
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+          {% for op in ops %}
+          <div class="col">
+            <a id="op-{{ op.function_name }}"></a>
+            <div class="card h-100 shadow-sm {% if selected_op == op.function_name %}border-primary{% endif %}">
+              <div class="card-body">
+                <h5 class="card-title d-flex align-items-center">
+                  {{ op.function_name|replace('_', ' ')|title }}
+                  {% if op.docstring %}
+                  <span tabindex="0" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ op.docstring|e }}" class="ms-2 text-info" style="cursor: pointer;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                      <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13A6 6 0 1 1 8 2a6 6 0 0 1 0 12z"/>
+                      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466.288 0 .352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.598l.088-.416c.073-.34.217-.466.465-.466z"/>
+                      <circle cx="8" cy="4.5" r="1"/>
+                    </svg>
+                  </span>
+                  {% endif %}
+                </h5>
+                <div class="formula-display mb-2">
+                {% set formulas = {
+                  'add': 'a + b = c',
+                  'subtract': 'a - b = c',
+                  'multiply': 'a \\times b = c',
+                  'divide': 'a \\div b = c',
+                  'modulo': 'a \\operatorname{mod}\\ b = r',
+                  'floor_divide': 'a \\operatorname{div}\\ b = q',
+                  'power': 'a^b = c',
+                  'square_root': 'y = \\sqrt{x}',
+                  'cube_root': 'y = \\sqrt[3]{x}',
+                  'nth_root': 'y = \\sqrt[n]{x}',
+                  'square': 'y = x^2',
+                  'cube': 'y = x^3',
+                  'absolute_value': 'y = |x|',
+                  'sign': 'y = \\operatorname{sgn}(x)',
+                  'ceiling': 'y = \\lceil x \\rceil',
+                  'floor': 'y = \\lfloor x \\rfloor',
+                  'round_to_decimals': 'y = \\operatorname{round}(x, d)',
+                  'factorial': 'n! = n \\times (n-1) \\times \\cdots \\times 1',
+                  'combination': 'C(n, r) = \\frac{n!}{r! (n-r)!}',
+                  'permutation': 'P(n, r) = \\frac{n!}{(n-r)!}',
+                  'greatest_common_divisor': '\\gcd(a, b)',
+                  'least_common_multiple': '\\mathrm{lcm}(a, b)',
+                  'is_prime': '\\text{Is }\ n\ \text{prime?}',
+                  'fibonacci': 'F_n = F_{n-1} + F_{n-2}',
+                  'arithmetic_mean': '\\frac{a + b}{2}',
+                  'geometric_mean': '\\sqrt{a b}',
+                  'harmonic_mean': '\\frac{2ab}{a + b}',
+                  'percentage': 'p = \\frac{\\text{part}}{\\text{whole}} \\times 100',
+                  'percentage_change': '\\frac{\\text{new} - \\text{old}}{\\text{old}} \\times 100',
+                  'area_triangle': 'A = \frac{1}{2} b h',
+                  'area_triangle_heron': 'A = \sqrt{s(s-a)(s-b)(s-c)}',
+                  'area_rhombus': 'A = \frac{d_1 d_2}{2}',
+                  'area_trapezoid': 'A = \frac{(b_1 + b_2) h}{2}',
+                  'area_regular_polygon': 'A = \frac{1}{2} P a',
+                  'area_ellipse': 'A = \pi a b',
+                  'area_sector': 'A = \frac{\theta}{360^\circ} \pi r^2',
+                  'area_annulus': 'A = \pi (R^2 - r^2)',
+                  'circumference_circle': 'C = 2 \pi r',
+                  'perimeter_rectangle': 'P = 2(l + w)',
+                  'perimeter_square': 'P = 4s',
+                  'perimeter_triangle': 'P = a + b + c',
+                  'perimeter_regular_polygon': 'P = n s',
+                  'perimeter_ellipse_approximation': 'P \approx \pi [3(a+b) - \sqrt{(3a+b)(a+3b)}]',
+                  'distance_2d': 'd = \sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}',
+                  'distance_3d': 'd = \sqrt{(x_2-x_1)^2 + (y_2-y_1)^2 + (z_2-z_1)^2}',
+                  'midpoint_2d': 'M = (\frac{x_1+x_2}{2}, \frac{y_1+y_2}{2})',
+                  'slope_line': 'm = \frac{y_2-y_1}{x_2-x_1}',
+                  'angle_between_vectors': '\theta = \arccos\left(\frac{\vec{a} \cdot \vec{b}}{|a||b|}\right)',
+                  'volume_cube': 'V = s^3',
+                  'volume_rectangular_prism': 'V = l w h',
+                  'volume_sphere': 'V = \frac{4}{3} \pi r^3',
+                  'volume_cylinder': 'V = \pi r^2 h',
+                  'volume_cone': 'V = \frac{1}{3} \pi r^2 h',
+                  'volume_pyramid': 'V = \frac{1}{3} B h',
+                  'volume_ellipsoid': 'V = \frac{4}{3} \pi a b c',
+                  'surface_area_sphere': 'A = 4 \pi r^2',
+                  'surface_area_cylinder': 'A = 2 \pi r (r + h)',
+                  'surface_area_cone': 'A = \pi r (r + l)',
+                  'sin_degrees': 'y = \sin(\theta^\circ)',
+                  'cos_degrees': 'y = \cos(\theta^\circ)',
+                  'tan_degrees': 'y = \tan(\theta^\circ)',
+                  'sin_radians': 'y = \sin(\theta)',
+                  'cos_radians': 'y = \cos(\theta)',
+                  'tan_radians': 'y = \tan(\theta)',
+                  'asin_degrees': '\theta^\circ = \arcsin(y)',
+                  'acos_degrees': '\theta^\circ = \arccos(y)',
+                  'atan_degrees': '\theta^\circ = \arctan(y)',
+                  'asin_radians': '\theta = \arcsin(y)',
+                  'acos_radians': '\theta = \arccos(y)',
+                  'atan_radians': '\theta = \arctan(y)',
+                  'atan2_degrees': '\theta^\circ = \arctan2(y, x)',
+                  'atan2_radians': '\theta = \arctan2(y, x)',
+                  'sec_degrees': 'y = \sec(\theta^\circ)',
+                  'csc_degrees': 'y = \csc(\theta^\circ)',
+                  'cot_degrees': 'y = \cot(\theta^\circ)',
+                  'degrees_to_radians': '\theta_{rad} = \theta_{deg} \cdot \frac{\pi}{180}',
+                  'radians_to_degrees': '\theta_{deg} = \theta_{rad} \cdot \frac{180}{\pi}',
+                  'natural_log': 'y = \ln(x)',
+                  'log_base_10': 'y = \log_{10}(x)',
+                  'log_base_2': 'y = \log_{2}(x)',
+                  'log_custom_base': 'y = \log_{b}(x)',
+                  'exponential_e': 'y = e^x',
+                  'exponential_base_10': 'y = 10^x',
+                  'exponential_base_2': 'y = 2^x',
+                  'exponential_custom_base': 'y = b^x',
+                  'sinh': 'y = \sinh(x)',
+                  'cosh': 'y = \cosh(x)',
+                  'tanh': 'y = \tanh(x)',
+                  'asinh': 'y = \operatorname{arcsinh}(x)',
+                  'acosh': 'y = \operatorname{arccosh}(x)',
+                  'atanh': 'y = \operatorname{arctanh}(x)',
+                  'mean': '\bar{x} = \frac{1}{n} \sum_{i=1}^n x_i',
+                  'median': '\text{Median}(x_1, ..., x_n)',
+                  'mode': '\text{Mode}(x_1, ..., x_n)',
+                  'variance_population': '\sigma^2 = \frac{1}{N} \sum_{i=1}^N (x_i - \mu)^2',
+                  'variance_sample': 's^2 = \frac{1}{n-1} \sum_{i=1}^n (x_i - \bar{x})^2',
+                  'standard_deviation_population': '\sigma = \sqrt{\frac{1}{N} \sum_{i=1}^N (x_i - \mu)^2}',
+                  'standard_deviation_sample': 's = \sqrt{\frac{1}{n-1} \sum_{i=1}^n (x_i - \bar{x})^2}',
+                  'range_values': 'R = \max(x_i) - \min(x_i)',
+                  'quartile_1': 'Q_1 = 25\% \text{ percentile}',
+                  'quartile_3': 'Q_3 = 75\% \text{ percentile}',
+                  'interquartile_range': 'IQR = Q_3 - Q_1',
+                  'correlation_coefficient': 'r = \frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum (x_i-\bar{x})^2 \sum (y_i-\bar{y})^2}}',
+                  'z_score': 'z = \frac{x - \mu}{\sigma}',
+                  'percentile': 'P = \frac{n}{100} (N+1)',
+                } %}
+                {% set latex = formulas.get(op.function_name, op.formula if op.formula else 'y = f(x)') %}
+                <span class="badge bg-secondary"></span>
+                <span class="formula-math">
+                  <img src="https://latex.codecogs.com/svg.image?{{ latex|urlencode }}"
+                       alt="{{ latex }}"
+                       style="max-height:38px; width:auto; max-width:100%; vertical-align:middle; display:inline-block; object-fit:contain;">
+                </span>
+                </div>
+
+                <form method="get" action="" class="mb-0">
+                  <input type="hidden" name="operation" value="{{ op.function_name }}">
+                  <div class="row g-2">
+                  {% for arg in op.required_args %}
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">{{ arg|replace('_', ' ')|title }}</label>
+                      <input type="text" class="form-control" name="{{ arg }}" value="{{ arg_values[arg] if selected_op == op.function_name else '' }}" placeholder="Enter {{ arg }}">
+                    </div>
+                  {% endfor %}
+                  </div>
+                  <div class="mt-3">
+                    <button class="btn btn-outline-primary btn-sm" type="submit">Calculate</button>
+                  </div>
+                </form>
+                {% if selected_op == op.function_name %}
+                  {% if result is not none %}
+                    <div class="alert alert-info mt-3">Result: <b>{{ result }}</b></div>
+                  {% elif error %}
+                    <div class="alert alert-danger mt-3">Error: {{ error }}</div>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <hr>
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+  </div>
+</div>
+<style>
+  .nav-tabs .nav-link.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff #007bff #fff;
+  }
+  .card-title { font-size: 1.1rem; }
+  .formula-display {
+    font-size: 1.05rem;
+    color: #007bff;
+    background: rgba(0, 123, 255, 0);
+    border-radius: 0.3em;
+    padding: 0.2em 0.6em 0.2em 0.6em;
+    display: inline-block;
+    margin-bottom: 0.2em;
+  }
+  .formula-math img {
+    filter: none;
+  }
+  body[data-theme="dark"] .formula-display {
+    color: #222;
+    background: #f8f9fa00;
+  }
+  body[data-theme="dark"] .formula-math img {
+    filter: invert(1) hue-rotate(180deg) brightness(1.1) contrast(1.2);
+  }
+  .op-desc {
+    color: #444 !important;
+  }
+  body[data-theme="dark"] .op-desc {
+    color: #b0b8c1 !important;
+  }
+  .card.h-100 { transition: box-shadow 0.2s; }
+  .card.h-100.border-primary { box-shadow: 0 0 0 2px #007bff33; }
+  body[data-theme="dark"] .card { background: #23272b; color: #f8f9fa; }
+  body[data-theme="light"] .card { background: #fff; color: #222; }
+</style>
+<script>
+  // Enable Bootstrap tooltips
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+  // Keep the active tab and scroll to the operation after form submission
+  document.addEventListener('DOMContentLoaded', function() {
+    const url = new URL(window.location.href);
+    const activeTab = url.searchParams.get('tab');
+    const opAnchor = url.hash;
+    if (activeTab) {
+      const tabBtn = document.querySelector(`#tab-${activeTab}`);
+      if (tabBtn) {
+        new bootstrap.Tab(tabBtn).show();
+      }
+    }
+    // Scroll to operation card if anchor present
+    if (opAnchor) {
+      const anchorElem = document.querySelector(opAnchor);
+      if (anchorElem) {
+        setTimeout(function() {
+          anchorElem.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 100);
+      }
+    }
+    // On tab click, add ?tab=Category to URL
+    document.querySelectorAll('.nav-link[data-bs-toggle="tab"]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        const cat = btn.id.replace('tab-', '');
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', cat);
+        history.replaceState(null, '', url);
+      });
+    });
+    // On form submit, add tab=Category and anchor to operation as hidden input
+    document.querySelectorAll('form').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        const active = document.querySelector('.nav-link.active');
+        if (active) {
+          let input = form.querySelector('input[name="tab"]');
+          if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'tab';
+            form.appendChild(input);
+          }
+          input.value = active.id.replace('tab-', '');
+        }
+        // Add anchor to URL for scrolling
+        const opInput = form.querySelector('input[name="operation"]');
+        if (opInput) {
+          form.action = window.location.pathname + window.location.search + '#op-' + opInput.value;
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

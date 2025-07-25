@@ -1,0 +1,6 @@
+{
+  "name": "CalcTool",
+  "description": "A calculator tool for performing basic and advanced arithmetic operations.",
+  "version": "0.1",
+  "type": ["cli", "web", "gui"]
+}
