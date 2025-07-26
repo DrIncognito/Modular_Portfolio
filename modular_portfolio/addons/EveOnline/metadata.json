@@ -1,0 +1,36 @@
+{
+  "name": "EveOnline",
+  "description": "Comprehensive EVE Online ESI API integration tool with secure authentication, categorized endpoints, and multi-interface support (CLI, Web, GUI).",
+  "version": "1.0.0",
+  "type": ["cli", "web", "gui"],
+  "author": "Dr.Incognito",
+  "requirements": [
+    "eveonline-api-util>=1.0.0",
+    "requests>=2.25.0",
+    "PyQt5>=5.15.0"
+  ],
+  "scopes": {
+    "public": [
+      "Universe data (systems, stations, market prices)",
+      "Server status",
+      "Market information"
+    ],
+    "private": [
+      "Character information",
+      "Wallet data",
+      "Assets and inventory",
+      "Fleet operations",
+      "Corporation data",
+      "Mail and notifications"
+    ]
+  },
+  "features": [
+    "Secure OAuth2 authentication",
+    "Multi-character support",
+    "Categorized API endpoints",
+    "Public and private scope separation",
+    "CLI, Web, and GUI interfaces",
+    "Token management and refresh",
+    "Comprehensive error handling"
+  ]
+}

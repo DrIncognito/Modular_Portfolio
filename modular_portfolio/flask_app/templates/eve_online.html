@@ -1,0 +1,864 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="eve-panel container py-4">
+  <div class="card mb-4">
+    <style>
+        body[data-theme="light"] .card, body[data-theme="light"] .list-group-item, body[data-theme="light"] .text-muted {
+        background: #f4f4f7 !important;
+        color: #222 !important;
+        border-radius: 0.25rem;
+        border: 1px solid #e0e0e0;
+        padding: 0.5em 1em;
+        font-size: 0.97em;
+        }
+        body[data-theme="dark"] .card, body[data-theme="dark"] .list-group-item, body[data-theme="dark"] .text-muted {
+        background: #23272b !important;
+        color: #f1f3f4 !important;
+        border-radius: 0.25rem;
+        border: 1px solid #343a40;
+        padding: 0.5em 1em;
+        font-size: 0.97em;
+        }
+
+    </style>
+    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+      <span><b>EVE Online API Tool</b></span>
+      <div>
+        <button class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#characterModal">Character Management</button>
+        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#configModal">API Configuration</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Search Bar Section -->
+      <div class="card mb-4" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-header bg-secondary text-white py-2 px-3"><b>Search EVE API</b></div>
+        <div class="card-body pb-2 pt-3">
+          <div class="mb-3 position-relative">
+            <div class="input-group shadow-sm rounded">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control border-start-0" id="eve-search-input" placeholder="category: search string" autocomplete="off" style="border-radius: 0 0.375rem 0.375rem 0;">
+              <span class="input-group-text bg-white border-start-0">
+                <label class="form-check-label me-1" for="eve-strict-toggle">Strict</label>
+                <input class="form-check-input" type="checkbox" id="eve-strict-toggle" checked>
+              </span>
+            </div>
+            <div id="eve-search-autocomplete" class="list-group position-absolute w-100" style="z-index: 10; max-height: 220px; overflow-y: auto; display: none;"></div>
+          </div>
+          <div id="eve-search-results"></div>
+        </div>
+      </div>
+  <!-- Character Management Modal -->
+  <div class="modal fade" id="characterModal" tabindex="-1" aria-labelledby="characterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="characterModalLabel">Character Management</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="character-list-section">
+            <h6>Authenticated Characters</h6>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0" id="character-grid">
+                <thead>
+                  <tr>
+                    <th>Portrait</th>
+                    <th>Username</th>
+                    <th>Default</th>
+                    <th>Refresh</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="character-grid-body">
+                  <!-- Populated by JS from localStorage -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <hr>
+          <button class="btn btn-success w-100" id="eve-auth-btn">Add/Authenticate Character</button>
+        </div>
+      </div>
+    </div>
+  </div>
+      <!-- Tabbed Category UI -->
+      <ul class="nav nav-tabs mb-3" id="eveApiTab" role="tablist">
+        {% for category, operations in categories.items() %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {% if loop.first %}active{% endif %}" 
+                    id="tab-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#tab-pane-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}" 
+                    type="button" 
+                    role="tab">
+              {{ category }}
+            </button>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="tab-content">
+        {% for category, operations in categories.items() %}
+        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+             id="tab-pane-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}" 
+             role="tabpanel">
+          <div class="row">
+            <div class="col-md-4">
+              <h5>{{ category }} Operations</h5>
+<div class="list-group eve-operation-list">
+  {% for op in operations %}
+  <button type="button" 
+          class="list-group-item list-group-item-action operation-item text-start mb-2" 
+          data-category="{{ category }}" 
+          data-operation="{{ op.function_name if op.function_name is defined else op }}"
+          onclick="selectOperation('{{ category }}', '{{ op.function_name if op.function_name is defined else op }}')">
+    <div><b>{{ op.function_name if op.function_name is defined else op }}</b></div>
+    {% if op.docstring is defined and op.docstring %}
+      <div class="small text-muted">{{ op.docstring }}</div>
+    {% endif %}
+    {% if op.required_args is defined and op.required_args %}
+      <div class="small"><b>Required:</b> {{ op.required_args|join(', ') }}</div>
+    {% endif %}
+  </button>
+  {% endfor %}
+</div>
+            </div>
+<div class="col-md-8">
+  <div class="card eve-operation-panel">
+    <div class="card-header" id="operation-panel-header-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}">
+      <h6 class="mb-0 operation-panel-title">Select an operation</h6>
+    </div>
+    <div class="card-body">
+      <!-- Info Section -->
+      <div class="eve-section mb-3">
+        <div class="fw-bold mb-1">Info</div>
+        <div class="operation-panel-desc text-muted"></div>
+      </div>
+      <!-- Input Section -->
+      <div class="eve-section mb-3">
+        <div class="fw-bold mb-1">Input</div>
+        <div id="character-select-container-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}" style="display:none;"></div>
+        <form class="mt-2" id="args-form-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}">
+          <div id="args-fields-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}"></div>
+        </form>
+      </div>
+      <!-- Buttons Section -->
+      <div class="eve-section mb-3">
+        <div class="fw-bold mb-1">Actions</div>
+        <button type="button" class="btn btn-primary me-2" id="dynamic-execute-btn-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}">
+          <i class="bi bi-play-fill me-1"></i> Execute Operation
+        </button>
+        <button type="button" class="btn btn-outline-secondary" 
+                onclick="clearResults('{{ category }}')"
+                id="clear-btn-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}">
+          <i class="bi bi-x-circle me-1"></i> Clear Results
+        </button>
+        <div class="form-check form-switch d-inline-block ms-3 align-middle">
+          <input class="form-check-input" type="checkbox" id="output-toggle-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}" checked>
+          <label class="form-check-label" for="output-toggle-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}">Pretty Output</label>
+        </div>
+      </div>
+      <!-- Output Section -->
+      <div class="eve-section">
+        <div class="fw-bold mb-1">Output</div>
+        <div id="results-{{ category|replace(' ', '-')|replace('&', 'and')|lower }}" class="operation-results" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Config Modal -->
+  <div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="configModalLabel">EVE Online API Configuration</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="configForm">
+            <div class="mb-3">
+              <label for="clientId" class="form-label">Client ID</label>
+              <input type="text" class="form-control" id="clientId" name="clientId" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientSecret" class="form-label">Client Secret</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="clientSecret" name="clientSecret" required>
+                <button class="btn btn-outline-secondary" type="button" id="toggleSecretBtn">Show</button>
+              </div>
+              <div id="secretSavedMsg" class="form-text text-success" style="display:none;">Secret saved and hidden for security.</div>
+            </div>
+            <div class="mb-3">
+              <label for="redirectUri" class="form-label">Redirect URI</label>
+              <input type="url" class="form-control" id="redirectUri" name="redirectUri" value="http://127.0.0.1:5000/api/eve_online/auth_callback" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveConfigBtn">Save Configuration</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+document.addEventListener('DOMContentLoaded', function() {
+<script>
+// --- OAuth2 Callback Handler ---
+function addCharacterFromOAuth() {
+  // Try to get character info and tokens from URL hash or query (or window.name/sessionStorage)
+  // Example: ?character_id=...&character_name=...&access_token=...&refresh_token=...
+  const params = new URLSearchParams(window.location.search);
+  const charId = params.get('character_id');
+  const charName = params.get('character_name');
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (charId && charName && accessToken && refreshToken) {
+    let chars = getCharacters();
+    // Remove any existing with same id
+    chars = chars.filter(c => c.character_id !== charId);
+    chars.push({ character_id: charId, character_name: charName, access_token: accessToken, refresh_token: refreshToken, is_default: !chars.length });
+    setCharacters(chars);
+    // Remove params from URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+    renderCharacterGrid();
+    // Optionally show modal
+    if (document.getElementById('characterModal')) {
+      const modal = new bootstrap.Modal(document.getElementById('characterModal'));
+      modal.show();
+    }
+  }
+}
+document.addEventListener('DOMContentLoaded', addCharacterFromOAuth);
+// --- API Config LocalStorage Logic ---
+function getApiConfig() {
+  try { return JSON.parse(localStorage.getItem('eve_api_config') || '{}'); } catch { return {}; }
+}
+function setApiConfig(cfg) {
+  localStorage.setItem('eve_api_config', JSON.stringify(cfg));
+}
+function renderApiConfig() {
+  const cfg = getApiConfig();
+  document.getElementById('clientId').value = cfg.clientId || '';
+  document.getElementById('redirectUri').value = cfg.redirectUri || 'http://127.0.0.1:5000/api/eve_online/auth_callback';
+  if (cfg.clientSecret) {
+    document.getElementById('clientSecret').value = '••••••••';
+    document.getElementById('clientSecret').setAttribute('readonly', 'readonly');
+    document.getElementById('toggleSecretBtn').textContent = 'Edit';
+    document.getElementById('secretSavedMsg').style.display = '';
+  } else {
+    document.getElementById('clientSecret').value = '';
+    document.getElementById('clientSecret').removeAttribute('readonly');
+    document.getElementById('toggleSecretBtn').textContent = 'Show';
+    document.getElementById('secretSavedMsg').style.display = 'none';
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  // Render config on modal open
+  document.getElementById('configModal').addEventListener('show.bs.modal', renderApiConfig);
+  renderApiConfig();
+  // Toggle secret show/edit
+  document.getElementById('toggleSecretBtn').onclick = function() {
+    const secretInput = document.getElementById('clientSecret');
+    if (secretInput.hasAttribute('readonly')) {
+      secretInput.removeAttribute('readonly');
+      secretInput.value = '';
+      this.textContent = 'Show';
+      document.getElementById('secretSavedMsg').style.display = 'none';
+    } else {
+      secretInput.type = secretInput.type === 'password' ? 'text' : 'password';
+      this.textContent = secretInput.type === 'password' ? 'Show' : 'Hide';
+    }
+  };
+  // Save config
+  document.getElementById('saveConfigBtn').onclick = function() {
+    const clientId = document.getElementById('clientId').value.trim();
+    const clientSecret = document.getElementById('clientSecret').hasAttribute('readonly') ? getApiConfig().clientSecret : document.getElementById('clientSecret').value.trim();
+    const redirectUri = document.getElementById('redirectUri').value.trim();
+    if (!clientId || !clientSecret || !redirectUri) {
+      alert('All fields are required.');
+      return;
+    }
+    setApiConfig({ clientId, clientSecret, redirectUri });
+    renderApiConfig();
+    alert('API configuration saved to browser.');
+  };
+});
+// --- Modern Search Bar Logic & Character Management Grid ---
+let defaultCharacterId = null;
+function getCharacters() {
+  try { return JSON.parse(localStorage.getItem('eve_characters') || '[]'); } catch { return []; }
+}
+function setCharacters(chars) {
+  localStorage.setItem('eve_characters', JSON.stringify(chars));
+}
+function renderCharacterGrid() {
+  const chars = getCharacters();
+  const grid = document.getElementById('character-grid-body');
+  grid.innerHTML = '';
+  if (!chars.length) {
+    grid.innerHTML = `<tr><td colspan="5" class="text-muted">No authenticated characters.</td></tr>`;
+    defaultCharacterId = null;
+    return;
+  }
+  chars.forEach(char => {
+    const tr = document.createElement('tr');
+    // Portrait
+    const tdPortrait = document.createElement('td');
+    tdPortrait.innerHTML = `<img src="https://images.evetech.net/characters/${char.character_id}/portrait?size=64" alt="portrait" class="rounded" style="width:40px;height:40px;">`;
+    // Username
+    const tdName = document.createElement('td');
+    tdName.textContent = char.character_name + ' (ID: ' + char.character_id + ')';
+    // Default star
+    const tdDefault = document.createElement('td');
+    tdDefault.innerHTML = `<button class="btn btn-link p-0 m-0 set-default-char-btn" data-charid="${char.character_id}" title="Set as default"><i class="bi ${char.is_default ? 'bi-star-fill text-warning' : 'bi-star'}"></i></button>`;
+    // Refresh
+    const tdRefresh = document.createElement('td');
+    tdRefresh.innerHTML = `<button class="btn btn-sm btn-outline-info refresh-char-btn" data-charid="${char.character_id}">Refresh</button>`;
+    // Remove
+    const tdRemove = document.createElement('td');
+    tdRemove.innerHTML = `<button class="btn btn-sm btn-danger remove-char-btn" data-charid="${char.character_id}">Remove</button>`;
+    tr.append(tdPortrait, tdName, tdDefault, tdRefresh, tdRemove);
+    grid.appendChild(tr);
+    if (char.is_default) defaultCharacterId = char.character_id;
+  });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  // Render character grid on modal open
+  document.getElementById('characterModal').addEventListener('show.bs.modal', renderCharacterGrid);
+  renderCharacterGrid();
+
+  // Character grid actions (event delegation)
+  document.getElementById('character-grid-body').onclick = function(e) {
+    const target = e.target.closest('button');
+    if (!target) return;
+    const charId = target.getAttribute('data-charid');
+    let chars = getCharacters();
+    if (target.classList.contains('remove-char-btn')) {
+      if (confirm('Remove this character?')) {
+        chars = chars.filter(c => c.character_id !== charId);
+        setCharacters(chars);
+        renderCharacterGrid();
+      }
+    } else if (target.classList.contains('set-default-char-btn')) {
+      chars = chars.map(c => ({...c, is_default: c.character_id === charId}));
+      setCharacters(chars);
+      renderCharacterGrid();
+    } else if (target.classList.contains('refresh-char-btn')) {
+      // Find character and refresh token
+      const char = chars.find(c => c.character_id === charId);
+      if (!char || !char.refresh_token) {
+        alert('No refresh token found for this character.');
+        return;
+      }
+      target.disabled = true;
+      target.textContent = 'Refreshing...';
+      fetch('/api/eve_online/refresh_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character_id: charId, refresh_token: char.refresh_token })
+      })
+      .then(r => r.json())
+      .then(resp => {
+        if (resp.error) {
+          alert('Refresh failed: ' + resp.error);
+        } else if (resp.access_token && resp.refresh_token) {
+          // Update tokens in localStorage
+          chars = chars.map(c => c.character_id === charId ? { ...c, access_token: resp.access_token, refresh_token: resp.refresh_token } : c);
+          setCharacters(chars);
+          alert('Token refreshed!');
+        } else {
+          alert('Unexpected response from server.');
+        }
+      })
+      .catch(() => alert('Network error during refresh.'))
+      .finally(() => {
+        target.disabled = false;
+        target.textContent = 'Refresh';
+      });
+    }
+  };
+
+    // Add/Authenticate Character: redirect to OAuth2 login
+    document.getElementById('eve-auth-btn').onclick = function() {
+      // Use API config from localStorage
+      const cfg = getApiConfig();
+      if (!cfg.clientId || !cfg.clientSecret || !cfg.redirectUri) {
+        alert('Please configure API credentials first.');
+        return;
+      }
+      // Redirect to backend auth endpoint, passing config as query params (or use sessionStorage/window.name if preferred)
+      const url = `/api/eve_online/auth?client_id=${encodeURIComponent(cfg.clientId)}&redirect_uri=${encodeURIComponent(cfg.redirectUri)}`;
+      window.location.href = url;
+    };
+
+  // --- Search Bar Logic ---
+  const searchInput = document.getElementById('eve-search-input');
+  const autocompleteBox = document.getElementById('eve-search-autocomplete');
+  const searchResults = document.getElementById('eve-search-results');
+  const strictToggle = document.getElementById('eve-strict-toggle');
+
+  // Autocomplete only for category part
+  searchInput.addEventListener('input', function() {
+    const val = this.value.trim();
+    autocompleteBox.innerHTML = '';
+    let cat = val;
+    if (val.includes(':')) {
+      [cat] = val.split(':', 1);
+    }
+    cat = cat.trim();
+    if (!cat) {
+      autocompleteBox.style.display = 'none';
+      return;
+    }
+    // Suggest categories only
+    const allCats = Object.keys(categories);
+    const matches = allCats.filter(c => c.toLowerCase().startsWith(cat.toLowerCase())).slice(0, 10);
+    if (matches.length) {
+      matches.forEach(match => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'list-group-item list-group-item-action';
+        item.textContent = match + ': ';
+        item.onclick = () => {
+          searchInput.value = match + ': ';
+          autocompleteBox.style.display = 'none';
+        };
+        autocompleteBox.appendChild(item);
+      });
+      autocompleteBox.style.display = 'block';
+    } else {
+      autocompleteBox.style.display = 'none';
+    }
+  });
+  document.addEventListener('click', function(e) {
+    if (!autocompleteBox.contains(e.target) && e.target !== searchInput) {
+      autocompleteBox.style.display = 'none';
+    }
+  });
+
+  // Search submit (on enter)
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doSearch();
+    }
+  });
+
+  function doSearch() {
+    const val = searchInput.value.trim();
+    if (!val) {
+      searchResults.innerHTML = '<div class="alert alert-warning">Please enter a search string.</div>';
+      return;
+    }
+    let cat = '', str = val;
+    if (val.includes(':')) {
+      [cat, str] = val.split(':', 2).map(s => s.trim());
+    } else {
+      cat = val;
+      str = '';
+    }
+    // Format category as array
+    let catArr = cat ? [cat.toLowerCase()] : [];
+    // Use strict toggle
+    let strict = strictToggle.checked;
+    // Use default character if available
+    let chars = getCharacters();
+    let defChar = chars.find(c => c.is_default);
+    let character_id = defChar ? defChar.character_id : null;
+    searchResults.innerHTML = '<div class="text-muted">Searching...</div>';
+    fetch('/api/eve_online/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categories: catArr, query: str, strict: strict, character_id: character_id })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        searchResults.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+      } else {
+        searchResults.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+    });
+  }
+
+
+// --- Dynamic argument fields for operation execution ---
+let selectedCategory = null;
+let selectedOperation = null;
+let selectedOpMeta = null;
+
+function updateOperationPanel(btn) {
+  // Remove selection from all
+  document.querySelectorAll('.operation-item').forEach(b => b.classList.remove('selected-operation'));
+  btn.classList.add('selected-operation');
+
+  selectedCategory = btn.getAttribute('data-category');
+  selectedOperation = btn.getAttribute('data-operation');
+  // Find op meta
+  const ops = categories[selectedCategory];
+  selectedOpMeta = ops.find(o => (o.function_name || o) === selectedOperation);
+
+  // Always update the right panel for this operation
+  const formId = `args-form-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`;
+  const fieldsId = `args-fields-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`;
+  const resultsId = `results-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`;
+  const panelHeader = document.getElementById(`operation-panel-header-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`);
+  const panelTitle = panelHeader ? panelHeader.querySelector('.operation-panel-title') : null;
+  const panelDesc = panelHeader ? panelHeader.parentElement.querySelector('.operation-panel-desc') : null;
+  const form = document.getElementById(formId);
+  const fields = document.getElementById(fieldsId);
+  const resultsDiv = document.getElementById(resultsId);
+  const outputToggle = document.getElementById(`output-toggle-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`);
+  if (!form || !fields || !resultsDiv || !panelTitle || !panelDesc || !outputToggle) return;
+
+  // Set panel title and description
+  if (selectedOpMeta && (selectedOpMeta.function_name || selectedOperation)) {
+    panelTitle.textContent = selectedOpMeta.function_name || selectedOperation;
+  } else {
+    panelTitle.textContent = 'Select an operation';
+  }
+  panelDesc.textContent = selectedOpMeta && selectedOpMeta.docstring ? selectedOpMeta.docstring : '';
+
+  // Character selector for private endpoints
+  const charSelectContainer = document.getElementById(`character-select-container-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`);
+  charSelectContainer.innerHTML = '';
+  let needsCharId = selectedOpMeta && selectedOpMeta.required_args && selectedOpMeta.required_args.includes('character_id');
+  if (needsCharId) {
+    // Fetch authenticated characters
+    fetch('/api/eve_online/characters')
+      .then(r => r.json())
+      .then(chars => {
+        if (chars && Array.isArray(chars) && chars.length) {
+          charSelectContainer.style.display = '';
+          let select = document.createElement('select');
+          select.className = 'form-select mb-2';
+          select.name = 'character_id';
+          chars.forEach(char => {
+            let opt = document.createElement('option');
+            opt.value = char.character_id;
+            opt.textContent = `${char.character_name} (ID: ${char.character_id})`;
+            select.appendChild(opt);
+          });
+          charSelectContainer.appendChild(select);
+        } else {
+          charSelectContainer.style.display = '';
+          charSelectContainer.innerHTML = '<div class="alert alert-warning">No authenticated characters found. Please authenticate first.</div>';
+        }
+      });
+  } else {
+    charSelectContainer.style.display = 'none';
+  }
+
+  // Render argument fields
+  fields.innerHTML = '';
+  if (selectedOpMeta && selectedOpMeta.required_args && selectedOpMeta.required_args.length) {
+    selectedOpMeta.required_args.forEach(arg => {
+      if (arg === 'character_id') return; // handled by selector
+      const group = document.createElement('div');
+      group.className = 'mb-2';
+      group.innerHTML = `<label class='form-label'>${arg.replace('_',' ').replace(/\b\w/g, l => l.toUpperCase())}</label><input type='text' class='form-control' name='${arg}' placeholder='Enter ${arg}'>`;
+      fields.appendChild(group);
+    });
+  }
+  form.style.display = 'block';
+  resultsDiv.innerHTML = '';
+
+  // Attach execute handler (replace previous)
+  const execBtn = document.getElementById(`dynamic-execute-btn-${selectedCategory.replace(/ /g,'-').replace(/&/g,'and').toLowerCase()}`);
+  execBtn.onclick = function() {
+    const data = { category: selectedCategory, operation: selectedOperation };
+    // If character selector is present, use its value
+    if (needsCharId) {
+      const charSelect = charSelectContainer.querySelector('select[name="character_id"]');
+      if (charSelect && charSelect.value) {
+        data['character_id'] = charSelect.value;
+      }
+    }
+    if (selectedOpMeta && selectedOpMeta.required_args && selectedOpMeta.required_args.length) {
+      selectedOpMeta.required_args.forEach(arg => {
+        if (arg === 'character_id') return; // already handled
+        const val = form.querySelector(`[name='${arg}']`).value;
+        data[arg] = val;
+      });
+    }
+    resultsDiv.innerHTML = '<div class="text-muted">Loading...</div>';
+    fetch('/api/eve_online/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(resp => {
+      if (resp.error) {
+        resultsDiv.innerHTML = `<div class='alert alert-danger'>${resp.error}</div>`;
+      } else {
+        // Output toggle: pretty or raw
+        if (outputToggle.checked) {
+          resultsDiv.innerHTML = `<pre>${JSON.stringify(resp, null, 2)}</pre>`;
+        } else {
+          resultsDiv.innerHTML = `<pre>${JSON.stringify(resp)}</pre>`;
+        }
+      }
+    });
+  };
+
+  // Output toggle handler
+  outputToggle.onchange = function() {
+    // If there is already output, re-render it in the new mode
+    let lastResp = resultsDiv.textContent;
+    try {
+      let json = JSON.parse(lastResp);
+      if (outputToggle.checked) {
+        resultsDiv.innerHTML = `<pre>${JSON.stringify(json, null, 2)}</pre>`;
+      } else {
+        resultsDiv.innerHTML = `<pre>${JSON.stringify(json)}</pre>`;
+      }
+    } catch {}
+  };
+}
+
+// Attach click handler to all operation items
+document.querySelectorAll('.operation-item').forEach(btn => {
+  btn.addEventListener('click', function() {
+    updateOperationPanel(btn);
+  });
+});
+
+// On tab show, trigger first operation click for that tab
+document.querySelectorAll('.nav-link[data-bs-toggle="tab"]').forEach(tabBtn => {
+  tabBtn.addEventListener('shown.bs.tab', function(e) {
+    const tabPaneId = tabBtn.getAttribute('data-bs-target');
+    const firstOp = document.querySelector(`${tabPaneId} .operation-item`);
+    if (firstOp) updateOperationPanel(firstOp);
+  });
+});
+
+// On DOMContentLoaded, trigger first operation click for the first tab
+document.addEventListener('DOMContentLoaded', function() {
+  const firstTabPane = document.querySelector('.tab-pane.show.active');
+  if (firstTabPane) {
+    const firstOp = firstTabPane.querySelector('.operation-item');
+    if (firstOp) updateOperationPanel(firstOp);
+  }
+});
+});
+
+// Add a default selected style to the first operation in each list on load
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.eve-operation-list').forEach(list => {
+    const firstOp = list.querySelector('.operation-item');
+    if (firstOp) firstOp.classList.add('selected-operation');
+  });
+  // (No-op: character add/remove/default is now fully client-side)
+});
+</script>
+
+<style>
+/* Modal theme support */
+[data-bs-theme="dark"] .modal-content, [data-bs-theme="dark"] .modal-header {
+  background-color: var(--eve-card-bg) !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="light"] .modal-content, [data-bs-theme="light"] .modal-header {
+  background-color: #fff !important;
+  color: #222 !important;
+}
+
+/* --- Improved dark theme for EVE Online Tool --- */
+[data-bs-theme="dark"] {
+  --eve-bg: #181a1b;
+  --eve-card-bg: #23272b;
+  --eve-card-header-bg: #23272b;
+  --eve-card-border: #343a40;
+  --eve-input-bg: #23272b;
+  --eve-input-border: #495057;
+  --eve-text: #f1f3f4;
+  --eve-muted: #b0b3b8;
+  --eve-primary: #0d6efd;
+  --eve-secondary: #6c757d;
+}
+
+[data-bs-theme="dark"] body, [data-bs-theme="dark"] .eve-panel {
+  background-color: var(--eve-bg) !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="dark"] .card {
+  background-color: var(--eve-card-bg) !important;
+  border-color: var(--eve-card-border) !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="dark"] .card-header {
+  background-color: var(--eve-card-header-bg) !important;
+  border-color: var(--eve-card-border) !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="dark"] .card-body {
+  background-color: var(--eve-card-bg) !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="dark"] .form-control {
+  background-color: var(--eve-input-bg) !important;
+  border-color: var(--eve-input-border) !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="dark"] .form-control:focus {
+  background-color: var(--eve-input-bg) !important;
+  border-color: var(--eve-primary) !important;
+  color: var(--eve-text) !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+}
+[data-bs-theme="dark"] .nav-tabs {
+  border-color: var(--eve-card-border) !important;
+}
+[data-bs-theme="dark"] .nav-tabs .nav-link {
+  color: var(--eve-muted) !important;
+  border-color: transparent !important;
+  background: none !important;
+}
+[data-bs-theme="dark"] .nav-tabs .nav-link:hover {
+  border-color: var(--eve-input-border) !important;
+  color: var(--eve-primary) !important;
+}
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+  background-color: var(--eve-card-header-bg) !important;
+  border-color: var(--eve-card-border) var(--eve-card-border) var(--eve-card-header-bg) !important;
+  color: var(--eve-primary) !important;
+}
+[data-bs-theme="dark"] .tab-content {
+  background-color: var(--eve-card-bg) !important;
+  border: 1px solid var(--eve-card-border) !important;
+  border-top: none !important;
+  color: var(--eve-text) !important;
+}
+[data-bs-theme="dark"] .operation-results {
+  background: var(--eve-bg) !important;
+  color: var(--eve-text) !important;
+  border-radius: 0.25rem;
+  border: 1px solid var(--eve-card-border);
+  padding: 0.5rem 1rem;
+}
+[data-bs-theme="dark"] .form-check-label,
+[data-bs-theme="dark"] .form-label {
+  color: var(--eve-muted) !important;
+}
+[data-bs-theme="dark"] .btn-primary {
+  background-color: var(--eve-primary) !important;
+  border-color: var(--eve-primary) !important;
+  color: #fff !important;
+}
+[data-bs-theme="dark"] .btn-outline-secondary {
+  color: var(--eve-muted) !important;
+  border-color: var(--eve-secondary) !important;
+}
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+  background: var(--eve-secondary) !important;
+  color: #fff !important;
+}
+[data-bs-theme="dark"] .input-group-text {
+  background: var(--eve-card-header-bg) !important;
+  color: var(--eve-muted) !important;
+  border-color: var(--eve-card-border) !important;
+}
+[data-bs-theme="dark"] .list-group-item {
+  background: var(--eve-card-bg) !important;
+  color: var(--eve-text) !important;
+  border-color: var(--eve-card-border) !important;
+}
+[data-bs-theme="dark"] .list-group-item-action:hover {
+  background: var(--eve-input-bg) !important;
+  color: var(--eve-primary) !important;
+}
+[data-bs-theme="dark"] .modal-content {
+  background-color: var(--eve-card-bg) !important;
+  border-color: var(--eve-card-border) !important;
+}
+[data-bs-theme="dark"] .modal-header {
+  background-color: var(--eve-card-header-bg) !important;
+  border-color: var(--eve-card-border) !important;
+}
+[data-bs-theme="dark"] .spinner-border {
+  color: var(--eve-primary) !important;
+}
+
+/* Light mode overrides for better consistency */
+[data-bs-theme="light"] .card {
+  background-color: var(--bs-white) !important;
+  border-color: var(--bs-gray-300) !important;
+}
+
+[data-bs-theme="light"] .tab-content {
+  background-color: var(--bs-white) !important;
+  border: 1px solid var(--bs-gray-300) !important;
+  border-top: none !important;
+}
+/* --- Operation selection visual feedback --- */
+.operation-item.selected-operation {
+  border: 2px solid #0d6efd !important;
+  box-shadow: 0 0 8px 2px #0d6efd33;
+  background: linear-gradient(90deg, #0d6efd11 0%, transparent 100%);
+  color: #0d6efd !important;
+  font-weight: 600;
+  z-index: 2;
+}
+.eve-operation-list .operation-item {
+  margin-bottom: 0.5rem;
+  border-radius: 0.375rem;
+  transition: box-shadow 0.2s, border 0.2s, background 0.2s;
+}
+.eve-operation-list .operation-item:not(.selected-operation):hover {
+  border: 1.5px solid #0d6efd77;
+  box-shadow: 0 0 4px 1px #0d6efd22;
+  background: #f4f8ff;
+}
+.eve-section {
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+.eve-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.eve-operation-panel .fw-bold {
+  color: #0d6efd;
+}
+@media (prefers-color-scheme: dark) {
+  .operation-item.selected-operation {
+    border: 2px solid #0d6efd !important;
+    box-shadow: 0 0 8px 2px #0d6efd55;
+    background: linear-gradient(90deg, #0d6efd22 0%, transparent 100%);
+    color: #0d6efd !important;
+  }
+  .eve-operation-list .operation-item:not(.selected-operation):hover {
+    border: 1.5px solid #0d6efd77;
+    box-shadow: 0 0 4px 1px #0d6efd44;
+    background: #23272b;
+  }
+  .eve-section {
+    border-bottom: 1px solid #343a40;
+  }
+}
+[data-bs-theme="dark"] .operation-item.selected-operation {
+  border: 2px solid #0d6efd !important;
+  box-shadow: 0 0 8px 2px #0d6efd55;
+  background: linear-gradient(90deg, #0d6efd22 0%, transparent 100%);
+  color: #0d6efd !important;
+}
+[data-bs-theme="dark"] .eve-operation-list .operation-item:not(.selected-operation):hover {
+  border: 1.5px solid #0d6efd77;
+  box-shadow: 0 0 4px 1px #0d6efd44;
+  background: #23272b;
+}
+[data-bs-theme="dark"] .eve-section {
+  border-bottom: 1px solid #343a40;
+}
+</style>
+{% endblock %}

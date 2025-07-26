@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from modular_portfolio.modular_core.loader import PluginLoader
-from flask_app.routes import plugin_routes
+from modular_portfolio.flask_app.routes import plugin_routes
 
 app = Flask(__name__)
 loader = PluginLoader()

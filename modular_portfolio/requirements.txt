@@ -5,4 +5,6 @@ watchdog
 markdown
 markdown
 speedtest-CLI
+jsonify
+git+https://github.com/DrIncognito/EveOnline_API_Util.git
 
